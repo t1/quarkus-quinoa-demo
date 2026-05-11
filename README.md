@@ -25,9 +25,27 @@ Then open:
 - **OpenAPI UI**: http://localhost:8080/openapi-ui
 - **OpenAPI Spec**: http://localhost:8080/q/openapi
 
+## Testing
+
+E2E tests using Playwright for Java. Tests run against the packaged JAR via `@QuarkusIntegrationTest`.
+
+**Setup (one-time):**
+```shell
+mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium" -D exec.classpathScope=test
+```
+
+**Run tests:**
+```shell
+mvn verify                           # All tests
+mvn verify -Dit.test=BookCrudIT      # Specific class
+```
+
+**Status:** 11/13 tests passing (2 edit tests disabled pending Vue reactivity investigation)
+
 ## Related Guides
 
 - Quinoa ([guide](https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/index.html)): Develop, build, and serve your npm-compatible web applications such as React, Angular, Vue, Lit, Svelte, Astro, SolidJS, and others alongside Quarkus.
 - REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
 - Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): Simplified JPA/Hibernate data access layer with active record and repository patterns
 - JDBC Driver - H2 ([guide](https://quarkus.io/guides/datasource)): Connect to the H2 database via JDBC
+- Playwright ([docs](https://playwright.dev/)): Modern end-to-end testing framework

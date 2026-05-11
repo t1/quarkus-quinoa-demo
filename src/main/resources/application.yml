@@ -1,8 +1,16 @@
 quarkus:
   quinoa:
+    ui-dir: src/main/webui
+    build-dir: dist
     package-manager-install:
-      enabled: true
-      node-version: "20.10.0"
+      enabled: false
     ignored-path-prefixes: /openapi-ui,/q
   swagger-ui:
     enabled: false
+  datasource:
+    db-kind: h2
+    jdbc:
+      url: jdbc:h2:mem:test
+  hibernate-orm:
+    database:
+      generation: drop-and-create

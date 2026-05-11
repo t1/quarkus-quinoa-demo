@@ -4,6 +4,8 @@ This is a Quarkus application. Follow these rules when working on this project.
 
 ## CRITICAL -- Skills-First Rule (ALWAYS check skills first)
 
+**ALWAYS** load the `project-hygiene` skill.
+
 **For ANY Quarkus question, configuration issue, or extension usage:**
 
 1. **IMMEDIATELY call `quarkus_skills`** before attempting to answer or search elsewhere.
