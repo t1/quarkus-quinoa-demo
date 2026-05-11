@@ -1,5 +1,6 @@
 package com.example.e2e;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.RequestOptions;
 import io.quarkus.test.common.http.TestHTTPResource;
@@ -10,20 +11,20 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.microsoft.playwright.options.LoadState.NETWORKIDLE;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
-/**
- * Base class for Playwright E2E tests.
- * Uses Quarkus integration test to ensure the app is running.
- */
 @QuarkusIntegrationTest
 public abstract class PlaywrightTestBase {
 
     static Playwright playwright;
     static Browser browser;
-    BrowserContext context;
-    Page page;
+    protected BrowserContext context;
+    protected Page page;
 
     @TestHTTPResource("/") URL baseUrl;
 
@@ -56,9 +57,8 @@ public abstract class PlaywrightTestBase {
 
     void navigateHome() {
         page.navigate(baseUrl());
-        page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
-        // Give Vue time to hydrate
-        page.waitForTimeout(1000);
+        page.waitForLoadState(NETWORKIDLE);
+        page.waitForSelector("h1");
     }
 
     void deleteAllBooks() {
@@ -67,33 +67,33 @@ public abstract class PlaywrightTestBase {
 
         if (!response.ok()) return;
 
-        var text = response.text();
-        if (text.equals("[]")) return;
-
-        // Parse JSON manually to avoid Jackson dependency issues
-        var cleanText = text.replaceAll("[\\[\\] ]", "");
-        var books = cleanText.split("},\\{");
-        for (var book : books) {
-            if (book.contains("\"id\":")) {
-                var id = book.replaceAll(".*\"id\":(\\d+).*", "$1");
-                request.delete(baseUrl() + "api/books/" + id);
+        try {
+            var books = new ObjectMapper().readValue(response.text(), Map[].class);
+            for (var book : books) {
+                request.delete(baseUrl() + "api/books/" + book.get("id"));
             }
+        } catch (Exception e) {
+            throw new RuntimeException("could not parse books response", e);
         }
     }
 
     void createBook(String title, String author, String isbn, Integer year) {
-        var json = String.format(
-            "{\"title\":\"%s\",\"author\":\"%s\"%s%s}",
-            title, author,
-            isbn != null ? ",\"isbn\":\"" + isbn + "\"" : "",
-            year != null ? ",\"publicationYear\":" + year : ""
-        );
+        try {
+            var fields = new HashMap<String, Object>();
+            fields.put("title", title);
+            fields.put("author", author);
+            if (isbn != null) fields.put("isbn", isbn);
+            if (year != null) fields.put("publicationYear", year);
 
-        var response = page.request().post(baseUrl() + "api/books",
-            RequestOptions.create()
-                .setHeader("Content-Type", "application/json")
-                .setData(json));
+            var json = new ObjectMapper().writeValueAsString(fields);
+            var response = page.request().post(baseUrl() + "api/books",
+                RequestOptions.create()
+                    .setHeader("Content-Type", "application/json")
+                    .setData(json));
 
-        assertThat(response).isOK();
+            assertThat(response).isOK();
+        } catch (Exception e) {
+            throw new RuntimeException("could not serialize book", e);
+        }
     }
 }

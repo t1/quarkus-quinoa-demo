@@ -1,16 +1,15 @@
 package com.example.e2e;
 
+import com.microsoft.playwright.Dialog;
 import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.options.WaitForSelectorState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.BDDAssertions.then;
 
-/**
- * Book CRUD Operations Tests
- */
 class BookCrudIT extends PlaywrightTestBase {
 
     @BeforeEach void setup() {
@@ -36,9 +35,9 @@ class BookCrudIT extends PlaywrightTestBase {
         assertThat(bookCard.locator(".isbn")).containsText("978-0345391803");
         assertThat(bookCard.locator(".year")).containsText("1979");
 
-        assertEquals("", page.locator("#title").inputValue());
-        assertEquals("", page.locator("#author").inputValue());
-        assertEquals("", page.locator("#isbn").inputValue());
+        then(page.locator("#title").inputValue()).isEmpty();
+        then(page.locator("#author").inputValue()).isEmpty();
+        then(page.locator("#isbn").inputValue()).isEmpty();
     }
 
     @Test void shouldAddBookWithOnlyRequiredFields() {
@@ -63,7 +62,7 @@ class BookCrudIT extends PlaywrightTestBase {
         assertThat(bookCard).isVisible();
 
         bookCard.locator(".btn-edit").click();
-        bookCard.locator(".book-info").waitFor(new Locator.WaitForOptions().setState(com.microsoft.playwright.options.WaitForSelectorState.HIDDEN));
+        bookCard.locator(".book-info").waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.HIDDEN));
 
         var titleInput = bookCard.locator("input").first();
         titleInput.fill("");
@@ -85,7 +84,7 @@ class BookCrudIT extends PlaywrightTestBase {
         assertThat(bookCard).isVisible();
 
         bookCard.locator(".btn-edit").click();
-        bookCard.locator(".book-info").waitFor(new Locator.WaitForOptions().setState(com.microsoft.playwright.options.WaitForSelectorState.HIDDEN));
+        bookCard.locator(".book-info").waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.HIDDEN));
 
         var titleInput = bookCard.locator("input").first();
         titleInput.fill("");
@@ -105,7 +104,7 @@ class BookCrudIT extends PlaywrightTestBase {
             new Locator.FilterOptions().setHasText("The Hobbit"));
         assertThat(bookCard).isVisible();
 
-        page.onDialog(dialog -> dialog.accept());
+        page.onDialog(Dialog::accept);
         bookCard.locator(".btn-delete").click();
 
         assertThat(bookCard).not().isVisible();
@@ -119,7 +118,7 @@ class BookCrudIT extends PlaywrightTestBase {
             new Locator.FilterOptions().setHasText("The Hobbit"));
         assertThat(bookCard).isVisible();
 
-        page.onDialog(dialog -> dialog.dismiss());
+        page.onDialog(Dialog::dismiss);
         bookCard.locator(".btn-delete").click();
 
         assertThat(bookCard).isVisible();
@@ -139,6 +138,6 @@ class BookCrudIT extends PlaywrightTestBase {
         navigateHome();
 
         assertThat(page.locator(".books-grid")).isVisible();
-        assertEquals(2, page.locator(".book-card").count());
+        then(page.locator(".book-card").count()).isEqualTo(2);
     }
 }

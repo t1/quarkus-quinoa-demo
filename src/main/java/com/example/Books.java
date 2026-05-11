@@ -1,8 +1,17 @@
 package com.example;
 
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import org.jboss.resteasy.reactive.ResponseStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -13,7 +22,6 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import java.util.List;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 
 @Path("/api/books")
 @Produces(APPLICATION_JSON)
@@ -35,23 +43,21 @@ public class Books {
     @APIResponse(responseCode = "200", description = "Book found",
             content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Book.class)))
     @APIResponse(responseCode = "404", description = "Book not found")
-    public Response getById(@Parameter(description = "Book ID", required = true) @PathParam("id") Long id) {
-        Book book = Book.findById(id);
-        if (book == null) {
-            return Response.status(NOT_FOUND).build();
-        }
-        return Response.ok(book).build();
+    public Book getById(@Parameter(description = "Book ID", required = true) @PathParam("id") Long id) {
+        return Book.<Book>findByIdOptional(id)
+                .orElseThrow(NotFoundException::new);
     }
 
     @POST
     @Transactional
+    @ResponseStatus(201)
     @Operation(summary = "Create a new book", description = "Adds a new book to the catalog")
     @APIResponse(responseCode = "201", description = "Book created",
             content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Book.class)))
     @APIResponse(responseCode = "400", description = "Invalid input")
-    public Response create(Book book) {
+    public Book create(@Valid Book book) {
         book.persist();
-        return Response.status(Response.Status.CREATED).entity(book).build();
+        return book;
     }
 
     @PUT
@@ -62,29 +68,24 @@ public class Books {
             content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Book.class)))
     @APIResponse(responseCode = "404", description = "Book not found")
     @APIResponse(responseCode = "400", description = "Invalid input")
-    public Response update(@Parameter(description = "Book ID", required = true) @PathParam("id") Long id, Book updatedBook) {
-        Book book = Book.findById(id);
-        if (book == null) {
-            return Response.status(NOT_FOUND).build();
-        }
-        book.title = updatedBook.title;
-        book.author = updatedBook.author;
-        book.isbn = updatedBook.isbn;
-        book.publicationYear = updatedBook.publicationYear;
-        return Response.ok(book).build();
+    public Book update(@Parameter(description = "Book ID", required = true) @PathParam("id") Long id, @Valid Book updatedBook) {
+        var book = Book.<Book>findByIdOptional(id)
+                .orElseThrow(NotFoundException::new);
+        book.updateFrom(updatedBook);
+        return book;
     }
 
     @DELETE
     @Path("/{id}")
     @Transactional
     @Operation(summary = "Delete a book", description = "Removes a book from the catalog")
-    @APIResponse(responseCode = "204", description = "Book deleted")
+    @APIResponse(responseCode = "200", description = "Book deleted",
+            content = @Content(mediaType = APPLICATION_JSON, schema = @Schema(implementation = Book.class)))
     @APIResponse(responseCode = "404", description = "Book not found")
-    public Response delete(@Parameter(description = "Book ID", required = true) @PathParam("id") Long id) {
-        boolean deleted = Book.deleteById(id);
-        if (!deleted) {
-            return Response.status(NOT_FOUND).build();
-        }
-        return Response.noContent().build();
+    public Book delete(@Parameter(description = "Book ID", required = true) @PathParam("id") Long id) {
+        var book = Book.<Book>findByIdOptional(id)
+                .orElseThrow(NotFoundException::new);
+        book.delete();
+        return book;
     }
 }
