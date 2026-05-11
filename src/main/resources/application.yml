@@ -1,0 +1,8 @@
+quarkus:
+  quinoa:
+    package-manager-install:
+      enabled: true
+      node-version: "20.10.0"
+    ignored-path-prefixes: /openapi-ui,/q
+  swagger-ui:
+    enabled: false

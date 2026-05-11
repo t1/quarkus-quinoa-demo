@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "quarkus-agent@quarkus-tools": true,
+    "tdder@t1": true
+  }
+}
