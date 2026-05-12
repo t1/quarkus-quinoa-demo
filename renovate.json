@@ -5,6 +5,11 @@
   ],
   "packageRules": [
     {
+      "description": "Wait 1 week before creating PRs for npm packages",
+      "matchManagers": ["npm"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
       "description": "Automerge non-major updates",
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true
